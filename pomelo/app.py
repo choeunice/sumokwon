@@ -13,6 +13,10 @@ USER = None
 API_KEY = None
 ROLE = None
 
+# Define a function to load configuration
+def load_config():
+    global HOST, ACCOUNT, USER, API_KEY, ROLE
+
 try:
 
     # replace these values in your .secrets.toml file, not here!
