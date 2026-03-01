@@ -2,42 +2,10 @@ import streamlit as st
 import json
 import requests
 from snowflake import connector as snowflake_connector
+# import snowflake.connector
 import sseclient
+# from last import get, get_top_tags, get_tag_info, collect_tags
 import os
-import sys
-
-# DEBUG: Print all environment variables (be careful with this in production!)
-print("=== ENVIRONMENT VARIABLES (first 10 chars only) ===")
-for key in ["SNOWFLAKE_HOST", "SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_API_KEY", "SNOWFLAKE_ROLE"]:
-    value = os.getenv(key, "NOT SET")
-    if value != "NOT SET" and len(value) > 10:
-        print(f"{key}: {value[:10]}...")
-    else:
-        print(f"{key}: {value}")
-
-print(f"Current working directory: {os.getcwd()}")
-print(f"Files in current directory: {os.listdir('.')}")
-if os.path.exists('pomelo'):
-    print(f"Files in pomelo directory: {os.listdir('pomelo')}")
-if os.path.exists('pomelo/.streamlit'):
-    print(f"Files in pomelo/.streamlit directory: {os.listdir('pomelo/.streamlit')}")
-    if os.path.exists('pomelo/.streamlit/secrets.toml'):
-        print("secrets.toml exists!")
-        with open('pomelo/.streamlit/secrets.toml', 'r') as f:
-            content = f.read()
-            # Mask sensitive data
-            for line in content.split('\n'):
-                if '=' in line:
-                    key = line.split('=')[0].strip()
-                    value = line.split('=')[1].strip().strip('"')
-                    if value and len(value) > 4:
-                        print(f"{key} = {value[:4]}...")
-                    else:
-                        print(f"{key} = {value}")
-    else:
-        print("secrets.toml does NOT exist!")
-else:
-    print("pomelo/.streamlit directory does NOT exist!")
 
 HOST = None
 ACCOUNT = None
@@ -49,39 +17,96 @@ ROLE = None
 def load_config():
     global HOST, ACCOUNT, USER, API_KEY, ROLE
 
-    print("=== LOADING CONFIG ===")
-    try:    
-        # replace these values in your .secrets.toml file, not here!
-        print("Trying st.secrets...")
-        print(f"st.secrets keys: {st.secrets.keys()}")
-        if "snowflake" in st.secrets:
-            print(f"snowflake keys: {st.secrets['snowflake'].keys()}")
-            
-        HOST = st.secrets["snowflake"]["host"]
-        ACCOUNT = st.secrets["snowflake"]["account"]
-        USER = st.secrets["snowflake"]["user"]
-        API_KEY = st.secrets["snowflake"]["api_key"]
-        ROLE = st.secrets["snowflake"]["role"]
-        
-        print(f"✅ Loaded from secrets: USER={USER}, HOST={HOST}")
 
-    except Exception as e:
-        print(f"❌ Failed to load from st.secrets: {e}")
-        print("Falling back to environment variables...")
-        HOST = os.getenv("SNOWFLAKE_HOST")
-        ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
-        USER = os.getenv("SNOWFLAKE_USER")
-        API_KEY = os.getenv("SNOWFLAKE_API_KEY")
-        ROLE = os.getenv("SNOWFLAKE_ROLE")
-        
-        print(f"From env: USER={USER}, HOST={HOST}")
+try:    
+    # replace these values in your .secrets.toml file, not here!
+    HOST = st.secrets["snowflake"]["host"]
+    ACCOUNT = st.secrets["snowflake"]["account"]
+    USER =st.secrets["snowflake"]["user"]
+    API_KEY = st.secrets["snowflake"]["api_key"]
+    ROLE = st.secrets["snowflake"]["role"]
 
-# Call load_config immediately
-load_config()
+except:
+    HOST = os.getenv("SNOWFLAKE_HOST")
+    ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
+    USER = os.getenv("SNOWFLAKE_USER")
+    API_KEY = os.getenv("SNOWFLAKE_API_KEY")
+    ROLE = os.getenv("SNOWFLAKE_ROLE")
 
 st.set_page_config(
     page_title="sumokwon"
 )
+
+# prompt = st.chat_input("send a message")
+
+# if prompt: 
+#     st.write(prompt)
+
+# API configuration 
+API_ENDPOINT = "/api/v2/cortex/inference:complete"
+API_TIMEOUT = 50000  # in milliseconds
+MODEL_NAME = "claude-3-5-sonnet" # change me to mistral-large2, llama3.1-70b or claude-3-5-sonnet and see what happens!
+
+# Chat assistant defaults 
+icons = {"assistant": "🌳", "user": "🦋"}
+
+default_message = [{"role": "assistant", "content": "Hi. I'm a simple chat bot that uses `"+MODEL_NAME+"` to answer questions. Ask me anything."}]
+
+
+def clear_chat_history():
+    st.session_state.messages = default_message
+
+
+def api_call(prompt: str):
+
+    text = ""
+    sql = ""
+    
+    payload = {
+        "model": MODEL_NAME,
+        "messages": [
+            {
+                "content": prompt
+            }
+        ],
+        "top_p": 0,
+        "temperature": 0
+    }
+    
+    resp = requests.post(
+            url=f"https://{HOST}"+API_ENDPOINT,
+            json=payload,
+            headers={
+                "Authorization": f'Snowflake Token="{st.session_state.CONN.rest.token}"'
+            }
+        ,stream=True)
+
+    #try:
+    if resp.status_code < 400:
+        client = sseclient.SSEClient(resp)
+
+
+        for event in client.events():
+
+            try: 
+                parsed = json.loads(event.data)
+
+                try: 
+                    if parsed['choices'][0]['delta']['type'] == 'text': 
+                        text = parsed['choices'][0]['delta']['text']
+                        #parsed
+                        yield text
+
+                    else: 
+                        text = parsed
+                        yield text
+
+
+                except:
+                    continue
+            except:
+                continue
+
 
 def connect_to_snowflake():
     # connection
@@ -89,13 +114,12 @@ def connect_to_snowflake():
         st.session_state.CONN = None
 
         try:
-            print("=== ATTEMPTING SNOWFLAKE CONNECTION ===")
-            print(f"Connection params: user={USER}, account={ACCOUNT}, host={HOST}, role={ROLE}")
-            print(f"API_KEY exists: {'Yes' if API_KEY else 'No'}")
+            # Check if secrets exist
+            required_secrets = ["host", "account", "user", "api_key"]
+            missing_secrets = [s for s in required_secrets if s not in st.secrets.get("snowflake", {})]
             
-            # Check if any params are None or empty
-            if not USER:
-                st.error("USER is empty! Check secrets or environment variables.", icon="🚨")
+            if missing_secrets:
+                st.error(f"Missing Snowflake secrets: {', '.join(missing_secrets)}", icon="🚨")
                 return
                 
             st.session_state.CONN = snowflake_connector.connect(
@@ -109,25 +133,40 @@ def connect_to_snowflake():
             st.success('Snowflake Connection established!', icon="💡")    
         except Exception as e:
             st.error(f'Connection failed: {str(e)}', icon="🚨")
-            print(f"❌ Connection exception: {e}")
-
-# Rest of your functions remain the same...
-def clear_chat_history():
-    st.session_state.messages = default_message
-
-def api_call(prompt: str):
-    # ... (keep your existing api_call function)
-
 def main():
+
     st.sidebar.title("수목원")
+
     st.sidebar.button('Clear chat history', on_click=clear_chat_history)
+
     connect_to_snowflake()
-    # ... (rest of your main function)
 
-# Make sure to define default_message before using it
-default_message = [{"role": "assistant", "content": "Hi. I'm a simple chat bot that uses `"+MODEL_NAME+"` to answer questions. Ask me anything."}]
-MODEL_NAME = "claude-3-5-sonnet"
-icons = {"assistant": "🌳", "user": "🦋"}
+    #  Initialize session state
+    # Store LLM-generated responses
+    if "messages" not in st.session_state.keys():
+        st.session_state.messages = default_message
 
+    # Display or clear chat messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"], avatar=icons[message["role"]]):
+            st.write(message["content"])
+
+
+    # User-provided prompt
+    if prompt := st.chat_input(disabled=not st.session_state.CONN):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user", avatar=icons["user"]):
+            st.write(prompt)
+
+    # Generate a new response if last message is not from assistant
+    if st.session_state.messages[-1]["role"] != "assistant":
+        with st.chat_message("assistant", avatar=icons["assistant"]):
+            response = api_call(prompt)
+            full_response = st.write_stream(response)
+        message = {"role": "assistant", "content": full_response}
+        st.session_state.messages.append(message)
+            
+   
 if __name__ == "__main__":
     main()
+
