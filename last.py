@@ -52,8 +52,8 @@ def get_top_tags(tuple):
         except:
             return []
 
-# print(get_top_tags(('Joji', 'PIXELATED KISSES')))
-# print(get_top_tags(('PureSnow', "I'm Never Looking Back")))
+# print(f'1: {get_top_tags(('Joji', 'PIXELATED KISSES'))}')
+# print(f'2: {get_top_tags(('PureSnow', "I'm Never Looking Back"))}')
 
 # GET tag info
 
@@ -71,18 +71,18 @@ def get_tag_info(tag):
     wiki = re.sub('\n+', ' ', wiki)
     return (tag, wiki)
 
-# print(get_tag_info('rage'))
-# print(get_tag_info('cloud rap'))
+# print(f'3: {get_tag_info('rage')}')
+# print(f'4: {get_tag_info('cloud rap')}')
 
 # combine top tags and tag info
 
 def collect_tags(L):
-    tags = [get_top_tags(L[i]) for i in range(0, len(L))]
-    return tags
+    '''
+    L is a list of tuples (artist, track).
+    '''
+    tags = [get_top_tags((i)) for i in L]
+    tags = [item for sublist in tags for item in sublist]
+    return [get_tag_info(tag) for tag in tags]
 
-L = [('Feng', 'Cali Crazy'), ('PureSnow', "I'm Never Looking Back"), ('Saam Sultan', 'Jump Shot')]
-print(collect_tags(L))
-
-print(get_top_tags(('Feng', 'Cali Crazy')))
-
-print(collect_tags(L[0]))
+# L = [('Joji', 'PIXELATED KISSES'), ('Chappell Roan', "Good Luck, Babe!")]
+# print(collect_tags(L))
