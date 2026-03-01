@@ -1,0 +1,16 @@
+You will prompt users for a number of songs.
+For each song, the user is required to provide an artist name and a track title.
+Consider the input insufficient if an artist name and a track title is not provided for each of the songs, and re-prompt the user.
+If there are misspellings, correct them to the best of your ability.
+
+Once a valid input is reached, store the data in the following form:
+Each song will be represented by a Python tuple (artist, title), where artist is the name of the artist and title is the name of the song.
+All of the tuples will be contained in a Python list.
+Once the list is achieved, run collect_tags(L) from last.py, where L is the list constructed using user inputs.
+The output will be another list of tuples, where the first item is the string name of a tag, and the second item is the summary description of the tag.
+Store this list output in a variable.
+
+The second input from the user will be a qualitative description of the type of music they are looking for.
+Using the input, look for patterns in the summaries (second elements of the tuples) contained in the output of collect_tags.
+Look for patterns. Your goal is find tags from the list of tags that correspond with the request that the user made.
+Once these optimal tags are obtained (no more than two tags), 
