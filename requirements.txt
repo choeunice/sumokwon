@@ -4,3 +4,4 @@ requests
 snowflake
 pandas
 re
+sseclient

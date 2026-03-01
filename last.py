@@ -77,10 +77,12 @@ def get_tag_info(tag):
 # combine top tags and tag info
 
 def collect_tags(L):
+    '''
+    L is a list of tuples (artist, track).
+    '''
     tags = [get_top_tags((i)) for i in L]
     tags = [item for sublist in tags for item in sublist]
     return [get_tag_info(tag) for tag in tags]
 
-L = [('Joji', 'PIXELATED KISSES'), ('Chappell Roan', "Good Luck, Babe!")]
-
-print(collect_tags(L))
+# L = [('Joji', 'PIXELATED KISSES'), ('Chappell Roan', "Good Luck, Babe!")]
+# print(collect_tags(L))
