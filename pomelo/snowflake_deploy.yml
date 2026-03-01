@@ -1,0 +1,38 @@
+name: Snowflake Deployment
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # Map secrets to environment variables
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.account }}
+      SNOWFLAKE_USER: ${{ secrets.user }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.api_key }}
+      # SNOWFLAKE_WAREHOUSE: ${{ secrets.SNOWFLAKE_WAREHOUSE }}
+      # SNOWFLAKE_DATABASE: ${{ secrets.SNOWFLAKE_DATABASE }}
+      # SNOWFLAKE_SCHEMA: ${{ secrets.SNOWFLAKE_SCHEMA }}
+      SNOWFLAKE_ROLE: ${{ secrets.role}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          pip install snowflake-connector-python
+          pip install snowflake-snowpark-python
+
+      - name: Run Snowflake deployment script
+        run: python scripts/deploy_to_snowflake.py

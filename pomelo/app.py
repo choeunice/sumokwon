@@ -4,6 +4,7 @@ import requests
 from snowflake import connector as snowflake_connector
 # import snowflake.connector
 import sseclient
+from last import get, get_top_tags, get_tag_info, collect_tags
 
 #st.markdown("info box?", True, help=None, width="stretch", text_alignment="left",)
 
@@ -107,7 +108,7 @@ def connect_to_snowflake():
             )  
             st.info('Snowflake Connection established!', icon="💡")    
         except:
-            st.error('Connection not established. Check that you have correctly entered your Snowflake credentials!', icon="🚨")    
+            st.error('Connection... not established. Check that you have correctly entered your Snowflake credentials!', icon="🚨")    
 
 def main():
 
