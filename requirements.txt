@@ -3,3 +3,4 @@ streamlit
 requests
 pandas
 sseclient
+snowflake-connector-python
