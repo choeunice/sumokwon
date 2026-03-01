@@ -3,3 +3,4 @@ streamlit
 requests
 snowflake
 pandas
+re
