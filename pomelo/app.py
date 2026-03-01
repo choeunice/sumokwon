@@ -4,17 +4,30 @@ import requests
 from snowflake import connector as snowflake_connector
 # import snowflake.connector
 import sseclient
-# from last import get, get_top_tags, get_tag_info, collect_tags
+from last import get, get_top_tags, get_tag_info, collect_tags
+import os
 
+HOST = None
+ACCOUNT = None
+USER = None
+API_KEY = None
+ROLE = None
 
+try:
 
+    # replace these values in your .secrets.toml file, not here!
+    HOST = st.secrets["snowflake"]["host"]
+    ACCOUNT = st.secrets["snowflake"]["account"]
+    USER =st.secrets["snowflake"]["user"]
+    API_KEY = st.secrets["snowflake"]["api_key"]
+    ROLE = st.secrets["snowflake"]["role"]
 
-# replace these values in your .secrets.toml file, not here!
-HOST = st.secrets["snowflake"]["host"]
-ACCOUNT = st.secrets["snowflake"]["account"]
-USER =st.secrets["snowflake"]["user"]
-API_KEY = st.secrets["snowflake"]["api_key"]
-ROLE = st.secrets["snowflake"]["role"]
+except:
+    HOST = os.getenv("SNOWFLAKE_HOST")
+    ACCOUNT = os.getenv("SNOWFLAKE_ACCOUNT")
+    USER = os.getenv("SNOWFLAKE_USER")
+    API_KEY = os.getenv("SNOWFLAKE_API_KEY")
+    ROLE = os.getenv("SNOWFLAKE_ROLE")
 
 
 st.set_page_config(
