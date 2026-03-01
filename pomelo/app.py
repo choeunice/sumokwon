@@ -32,7 +32,7 @@ API_TIMEOUT = 50000  # in milliseconds
 MODEL_NAME = "claude-3-5-sonnet" # change me to mistral-large2, llama3.1-70b or claude-3-5-sonnet and see what happens!
 
 # Chat assistant defaults 
-icons = {"assistant": "❄️", "user": "⛷️"}
+icons = {"assistant": "🌳", "user": "🦋"}
 
 default_message = [{"role": "assistant", "content": "Hi. I'm a simple chat bot that uses `"+MODEL_NAME+"` to answer questions. Ask me anything."}]
 
@@ -119,9 +119,7 @@ def connect_to_snowflake():
             st.error(f'Connection failed: {str(e)}', icon="🚨")
 def main():
 
-    st.sidebar.title("My First Chat App")
-
-    st.sidebar.caption("Visit [CORTEX PLAYGROUND](https://app.snowflake.com/_deeplink/#/cortex/playground) for an interactive interface to test out models, and view model availability")
+    st.sidebar.title("수목원")
 
     st.sidebar.button('Clear chat history', on_click=clear_chat_history)
 
