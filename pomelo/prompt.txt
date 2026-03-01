@@ -13,4 +13,4 @@ Store this list output in a variable.
 The second input from the user will be a qualitative description of the type of music they are looking for.
 Using the input, look for patterns in the summaries (second elements of the tuples) contained in the output of collect_tags.
 Look for patterns. Your goal is find tags from the list of tags that correspond with the request that the user made.
-Once these optimal tags are obtained (no more than two tags), 
+Once these optimal tags are obtained (no more than two tags), please give the user a list of five songs that fits their description.
