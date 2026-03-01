@@ -4,9 +4,9 @@ import requests
 from snowflake import connector as snowflake_connector
 # import snowflake.connector
 import sseclient
-from last import get, get_top_tags, get_tag_info, collect_tags
+# from last import get, get_top_tags, get_tag_info, collect_tags
 
-#st.markdown("info box?", True, help=None, width="stretch", text_alignment="left",)
+
 
 
 # replace these values in your .secrets.toml file, not here!
@@ -97,7 +97,15 @@ def connect_to_snowflake():
     if 'CONN' not in st.session_state or st.session_state.CONN is None:
         st.session_state.CONN = None
 
-        try: 
+        try:
+            # Check if secrets exist
+            required_secrets = ["host", "account", "user", "api_key"]
+            missing_secrets = [s for s in required_secrets if s not in st.secrets.get("snowflake", {})]
+            
+            if missing_secrets:
+                st.error(f"Missing Snowflake secrets: {', '.join(missing_secrets)}", icon="🚨")
+                return
+                
             st.session_state.CONN = snowflake_connector.connect(
                 user=USER,
                 password=API_KEY,
@@ -106,10 +114,9 @@ def connect_to_snowflake():
                 port=443,
                 role=ROLE
             )  
-            st.info('Snowflake Connection established!', icon="💡")    
-        except:
-            st.error('Connection... not established. Check that you have correctly entered your Snowflake credentials!', icon="🚨")    
-
+            st.success('Snowflake Connection established!', icon="💡")    
+        except Exception as e:
+            st.error(f'Connection failed: {str(e)}', icon="🚨")
 def main():
 
     st.sidebar.title("My First Chat App")
